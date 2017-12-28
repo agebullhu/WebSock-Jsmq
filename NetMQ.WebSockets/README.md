@@ -22,33 +22,29 @@ This is early beta and not ready for production use, but don't let that stop you
 Without further adieu, following is a small chat example:
 
 ```csharp
-using (NetMQContext context = NetMQContext.Create())
-{
-    using (WSRouter router = context.CreateWSRouter())
-    using (WSPublisher publisher = context.CreateWSPublisher())
-    {
-        router.Bind("ws://localhost:80");                    
-        publisher.Bind("ws://localhost:81");
+   using (var router = new WSRouter())
+            {
+                using (var publisher = new WSPublisher())
+                {
+                    router.Bind("ws://localhost:80");
+                    publisher.Bind("ws://localhost:81");
 
-        router.ReceiveReady += (sender, eventArgs) =>
-        {
-            byte[] identity = eventArgs.WSSocket.Receive();
-            string message = eventArgs.WSSocket.ReceiveString();
+                    router.ReceiveReady += (sender, eventArgs) =>
+                    {
+                        var identity = eventArgs.WSSocket.ReceiveFrameBytes();
+                        var message = eventArgs.WSSocket.ReceiveFrameString();
 
-            // let the webbrowser know we got the message
-            eventArgs.WSSocket.SendMore(identity).Send("OK");
+                        eventArgs.WSSocket.SendMoreFrame(identity).SendFrame("OK");
 
-            // the topic is "chat" and than we send the message
-            publisher.SendMore("chat").Send(message);
-        };
-            
-        Poller poller = new Poller();
-        poller.AddSocket(router);
+                        publisher?.SendMoreFrame("chat").SendFrame(message);
+                    };
 
-        poller.Start();
+                    var poller = new NetMQPoller();
+                    poller.Add(router);
 
-    }
-}
+                    poller.Run();
+                }
+            }
 ```
 
 For JSMQ example please visit the [JSMQ github page](https://github.com/somdoron/JSMQ).

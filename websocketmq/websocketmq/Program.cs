@@ -16,15 +16,16 @@ namespace websocketmq
 
                     router.ReceiveReady += (sender, eventArgs) =>
                     {
+                        var a = eventArgs.WSSocket.ReceiveFrameString();
                         var identity = eventArgs.WSSocket.ReceiveFrameBytes();
-                        string message = eventArgs.WSSocket.ReceiveFrameString();
+                        var message = eventArgs.WSSocket.ReceiveFrameString();
 
                         eventArgs.WSSocket.SendMoreFrame(identity).SendFrame("OK");
 
-                        publisher.SendMoreFrame("chat").SendFrame(message);
+                        publisher?.SendMoreFrame("chat").SendFrame(message);
                     };
 
-                    NetMQPoller poller = new NetMQPoller();
+                    var poller = new NetMQPoller();
                     poller.Add(router);
 
                     poller.Run();
