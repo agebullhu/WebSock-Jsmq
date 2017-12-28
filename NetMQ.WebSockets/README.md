@@ -22,7 +22,7 @@ This is early beta and not ready for production use, but don't let that stop you
 Without further adieu, following is a small chat example:
 
 ```csharp
-   using (var router = new WSRouter())
+ using (var router = new WSRouter())
             {
                 using (var publisher = new WSPublisher())
                 {
@@ -45,6 +45,38 @@ Without further adieu, following is a small chat example:
                     poller.Run();
                 }
             }
+```
+
+
+```csharp
+[Obsolete("Version < 4")]
+using (NetMQContext context = NetMQContext.Create())
+{
+    using (WSRouter router = context.CreateWSRouter())
+    using (WSPublisher publisher = context.CreateWSPublisher())
+    {
+        router.Bind("ws://localhost:80");                    
+        publisher.Bind("ws://localhost:81");
+
+        router.ReceiveReady += (sender, eventArgs) =>
+        {
+            byte[] identity = eventArgs.WSSocket.Receive();
+            string message = eventArgs.WSSocket.ReceiveString();
+
+            // let the webbrowser know we got the message
+            eventArgs.WSSocket.SendMore(identity).Send("OK");
+
+            // the topic is "chat" and than we send the message
+            publisher.SendMore("chat").Send(message);
+        };
+            
+        Poller poller = new Poller();
+        poller.AddSocket(router);
+
+        poller.Start();
+
+    }
+}
 ```
 
 For JSMQ example please visit the [JSMQ github page](https://github.com/somdoron/JSMQ).
