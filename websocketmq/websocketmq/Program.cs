@@ -21,7 +21,6 @@ namespace websocketmq
                     router.ReceiveReady += (sender, eventArgs) =>
                     {
                         var identity = eventArgs.WSSocket.ReceiveFrameBytes();
-                        var message = eventArgs.WSSocket.ReceiveFrameString();
 
                         using (var datasendercontext = new DataSenderContext())
                         {
